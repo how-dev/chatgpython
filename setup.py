@@ -28,6 +28,6 @@ setup(
                                     'chatgptonic.*']),
     test_suite='tests',
     url='https://github.com/how-dev/chatgpython',
-    version='1.0.0',
+    version='1.1.0',
     zip_safe=False,
 )

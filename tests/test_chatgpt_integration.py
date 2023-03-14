@@ -105,3 +105,15 @@ class TestChatGPT:
         mock_send.assert_called_once_with("some_message", creativity=.4)
 
         assert response == "some_response"
+
+    @patch.object(ChatGPT, "just_chat", return_value="some_gpt_message")
+    @patch("chatgptonic.integration.input")
+    @patch("chatgptonic.integration.print")
+    def test_interactive_chat_with_quit_input(
+        self, mock_print, mock_input, mock_just_chat, chatgpt
+    ):
+        mock_input.return_value = "c"
+        chatgpt.start_interactive_chat()
+        mock_input.assert_called_once_with(f"\033[92m [0.] You: \033[0m")
+        mock_just_chat.assert_not_called()
+        mock_print.assert_not_called()

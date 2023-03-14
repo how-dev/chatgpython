@@ -72,3 +72,15 @@ class ChatGPT:
         response = self.send(message, creativity=creativity)
 
         return response["choices"][0]["message"]["content"].replace("\n", "")
+
+    def start_interactive_chat(self):
+        count = 0
+        while True:
+            message = input(f"\033[92m [{count}.] You: \033[0m")
+            if message == "c":
+                break
+            print(f"\033[93m [{count}.] Thinking...\033[0m")
+            response = self.just_chat(message)
+            print(f"\033[94m [{count}.] ChatGPT: {response}\033[0m")
+            print(f"\033[96m [{count}.] ---------------------------\033[0m")
+            count += 1
