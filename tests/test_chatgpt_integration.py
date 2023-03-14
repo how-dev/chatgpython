@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, call
 
 from chatgptonic.integration import ChatGPTMessageException, ChatGPT
 
@@ -27,35 +27,31 @@ class TestChatGPT:
 
         assert headers == {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer some_api_key"
+            "Authorization": "Bearer some_api_key",
         }
 
     def test_get_body(self, chatgpt):
-        body = chatgpt._get_body("some_message", creativity=.8)
+        body = chatgpt._get_body("some_message", creativity=0.8)
 
         assert body == {
             "model": chatgpt.chat_model,
             "messages": [{"role": chatgpt.role, "content": "some_message"}],
-            "temperature": .8
+            "temperature": 0.8,
         }
 
     @patch("chatgptonic.integration.json")
     @patch.object(ChatGPT, "_get_body")
     @patch.object(ChatGPT, "_get_headers")
-    def test_get_request(
-        self, mock_get_headers, mock_get_body, mock_json, chatgpt
-    ):
-        request = chatgpt._get_request("some_message", creativity=.9)
-        mock_get_body.assert_called_once_with("some_message", .9)
+    def test_get_request(self, mock_get_headers, mock_get_body, mock_json, chatgpt):
+        request = chatgpt._get_request("some_message", creativity=0.9)
+        mock_get_body.assert_called_once_with("some_message", 0.9)
         mock_get_headers.assert_called_once()
-        mock_json.dumps.assert_called_once_with(
-            mock_get_body.return_value
-        )
+        mock_json.dumps.assert_called_once_with(mock_get_body.return_value)
 
         assert request == {
             "url": chatgpt.chat_url,
             "data": mock_json.dumps.return_value,
-            "headers": mock_get_headers.return_value
+            "headers": mock_get_headers.return_value,
         }
 
     @patch("chatgptonic.integration.json")
@@ -77,9 +73,7 @@ class TestChatGPT:
     @patch("chatgptonic.integration.json")
     @patch("chatgptonic.integration.requests")
     @patch.object(ChatGPT, "_get_request", return_value={"url": "some_url"})
-    def test_send_failure(
-        self, mock_get_request, mock_requests, mock_json, chatgpt
-    ):
+    def test_send_failure(self, mock_get_request, mock_requests, mock_json, chatgpt):
         mock_requests.post.return_value.status_code = 400
         mock_json.loads.return_value = {"error": {"message": "some_error_message"}}
 
@@ -98,11 +92,11 @@ class TestChatGPT:
     @patch.object(
         ChatGPT,
         "send",
-        return_value={"choices": [{"message": {"content": "\n\nsome_response"}}]}
+        return_value={"choices": [{"message": {"content": "\n\nsome_response"}}]},
     )
     def test_just_chat(self, mock_send, chatgpt):
-        response = chatgpt.just_chat("some_message", creativity=.4)
-        mock_send.assert_called_once_with("some_message", creativity=.4)
+        response = chatgpt.just_chat("some_message", creativity=0.4)
+        mock_send.assert_called_once_with("some_message", creativity=0.4)
 
         assert response == "some_response"
 
@@ -110,10 +104,14 @@ class TestChatGPT:
     @patch("chatgptonic.integration.input")
     @patch("chatgptonic.integration.print")
     def test_interactive_chat_with_quit_input(
-        self, mock_print, mock_input, mock_just_chat, chatgpt
+        self, _mock_print, mock_input, mock_just_chat, chatgpt
     ):
-        mock_input.return_value = "c"
+        mock_input.side_effect = ["some_input", "c"]
         chatgpt.start_interactive_chat()
-        mock_input.assert_called_once_with(f"\033[92m [0.] You: \033[0m")
-        mock_just_chat.assert_not_called()
-        mock_print.assert_not_called()
+        mock_input.assert_has_calls(
+            [
+                call("\033[92m [0.] You: \033[0m"),
+                call("\033[92m [1.] You: \033[0m"),
+            ]
+        )
+        mock_just_chat.assert_called_once_with("some_input")

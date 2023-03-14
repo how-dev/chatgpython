@@ -1,1 +1,6 @@
-pytest
+coverage==6.0b1
+pytest-cov==2.11.0
+pytest-flake8==1.1.1
+pytest==7.2.0
+flake8==4.0.1
+black
