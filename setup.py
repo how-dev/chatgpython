@@ -18,7 +18,7 @@ setup(
         "certifi==2022.12.7",
         "charset-normalizer==3.1.0",
         "idna==3.4",
-        "requests==2.28.2",
+        "requests>=2.0.0",
         "urllib3==1.26.15",
     ],
     include_package_data=True,
@@ -27,6 +27,6 @@ setup(
     packages=find_packages(include=['chatgptonic', 'chatgptonic.*']),
     test_suite='tests',
     url='https://github.com/how-dev/chatgpython',
-    version='1.1.0',
+    version='1.1.2',
     zip_safe=False,
 )
